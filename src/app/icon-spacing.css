@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Add to end of globals.css */
+
+/* ===== ICON + TEXT SPACING (Global Fix) ===== */
+
+/* Ensure proper gap between icons and text in flex containers */
+button svg, .btn svg {
+  flex-shrink: 0;
+}
+
+/* Login page improvements */
+.login-demo-card {
+  gap: 0.75rem;
+}
+
+/* Proper spacing for all icon + text combinations */
+[class*="gap-"] {
+  display: flex;
+  align-items: center;
+}

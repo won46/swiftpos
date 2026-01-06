@@ -1,0 +1,213 @@
+/* ========================================
+   THERMAL RECEIPT PRINTER STYLES
+   Optimized for 80mm thermal paper
+   ======================================== */
+
+@media print {
+  /* Hide everything except receipt */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  .receipt-container,
+  .receipt-container * {
+    visibility: visible !important;
+  }
+  
+  .receipt-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Remove margins for thermal paper */
+  @page {
+    margin: 0;
+    size: 80mm auto; /* 80mm width, auto height */
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide non-receipt elements */
+  header, nav, footer, aside, .no-print {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   RECEIPT STYLING (Screen & Print)
+   ======================================== */
+
+.receipt-container {
+  font-family: 'Courier New', 'Courier', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 80mm;
+  margin: 0 auto;
+  padding: 5mm;
+  background: white;
+  color: black;
+}
+
+/* Header Section */
+.receipt-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.receipt-header h1 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  letter-spacing: 2px;
+}
+
+.receipt-header p {
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Dividers */
+.receipt-divider {
+  text-align: center;
+  margin: 6px 0;
+  font-family: monospace;
+  font-size: 11px;
+  overflow: hidden;
+}
+
+/* Info Section */
+.receipt-info p {
+  margin: 3px 0;
+  font-size: 11px;
+}
+
+.receipt-info strong {
+  font-weight: bold;
+}
+
+/* Items Table */
+.receipt-items {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.receipt-items th {
+  text-align: left;
+  border-bottom: 1px dashed #000;
+  padding: 4px 2px;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.receipt-items td {
+  padding: 3px 2px;
+  vertical-align: top;
+}
+
+.receipt-items th:nth-child(2),
+.receipt-items td:nth-child(2) {
+  text-align: center;
+  width: 10%;
+}
+
+.receipt-items th:nth-child(3),
+.receipt-items td:nth-child(3),
+.receipt-items th:nth-child(4),
+.receipt-items td:nth-child(4) {
+  text-align: right;
+  width: 25%;
+}
+
+/* Totals Section */
+.receipt-totals {
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 0;
+}
+
+.total-row span:first-child {
+  flex: 1;
+}
+
+.total-row span:last-child {
+  text-align: right;
+  min-width: 100px;
+}
+
+.grand-total {
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+/* Payment Section */
+.receipt-payment {
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+/* Footer Section */
+.receipt-footer {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.receipt-footer p {
+  margin: 3px 0;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* ========================================
+   58MM PAPER VARIANT (Optional)
+   ======================================== */
+
+@media print and (max-width: 58mm) {
+  @page {
+    size: 58mm auto;
+  }
+
+  .receipt-container {
+    max-width: 58mm;
+    padding: 3mm;
+    font-size: 10px;
+  }
+
+  .receipt-header h1 {
+    font-size: 16px;
+  }
+
+  .receipt-items {
+    font-size: 9px;
+  }
+
+  .grand-total {
+    font-size: 12px;
+  }
+}
+
+/* ========================================
+   SCREEN PREVIEW STYLING
+   ======================================== */
+
+@media screen {
+  .receipt-container {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    margin: 20px auto;
+  }
+}
