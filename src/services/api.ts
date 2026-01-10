@@ -164,7 +164,8 @@ export const transactionsAPI = {
     discountAmount: number;
     totalAmount: number;
     paidAmount: number;
-    paymentMethod: 'CASH' | 'CARD' | 'QRIS' | 'DEBT'; // Updated payment methods
+    paymentMethod: 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT'; // Updated payment methods
+    payments?: Array<{ method: string; amount: number; notes?: string }>;
   }) =>
     api.post('/transactions', data),
 
@@ -227,7 +228,7 @@ export const suppliersAPI = {
 
 // Purchase Orders API
 export const purchasesAPI = {
-  getAll: (params?: { status?: string; supplierId?: string }) =>
+  getAll: (params?: { status?: string; supplierId?: string; search?: string }) =>
     api.get('/purchases', { params }),
   
   getById: (id: string) =>
@@ -344,6 +345,18 @@ export const paymentsAPI = {
     customerName?: string;
   }) =>
     api.post('/payments/qris/create', data),
+
+  createSnapTransaction: (data: {
+    amount: number;
+    items?: Array<{
+      productId: string;
+      quantity: number;
+      unitPrice: number;
+      name: string;
+    }>;
+    customerName?: string;
+  }) =>
+    api.post('/payments/snap/create', data),
   
   checkStatus: (orderId: string) =>
     api.get(`/payments/qris/${orderId}/status`),
@@ -373,6 +386,9 @@ export const discountsAPI = {
     startDate?: string;
     endDate?: string;
     isActive?: boolean;
+    categoryId?: number;
+    applicableProducts?: string[];
+    applicableUnit?: string;
   }) =>
     api.post('/discounts', data),
   
@@ -454,6 +470,69 @@ export const customersAPI = {
   
   delete: (id: string) =>
     api.delete(`/customers/${id}`),
+};
+
+// Sales Returns API
+export const salesReturnsAPI = {
+  getAll: (params?: { startDate?: string; endDate?: string; status?: string }) =>
+    api.get('/sales-returns', { params }),
+
+  getById: (id: string) =>
+    api.get(`/sales-returns/${id}`),
+
+  getByTransaction: (transactionId: string) =>
+    api.get(`/sales-returns/transaction/${transactionId}`),
+
+  create: (data: {
+    transactionId: string;
+    items: Array<{
+      productId: string;
+      quantity: number;
+      reason: string;
+      condition: 'NEW' | 'OPENED' | 'DAMAGED';
+    }>;
+    reason: string;
+    notes?: string;
+    refundMethod: 'CASH' | 'TRANSFER';
+  }) =>
+    api.post('/sales-returns', data),
+
+  complete: (id: string) =>
+    api.post(`/sales-returns/${id}/complete`),
+
+  delete: (id: string) =>
+    api.delete(`/sales-returns/${id}`),
+};
+
+// Purchase Returns API
+export const purchaseReturnsAPI = {
+  getAll: (params?: { startDate?: string; endDate?: string; supplierId?: string }) =>
+    api.get('/purchase-returns', { params }),
+
+  getById: (id: string) =>
+    api.get(`/purchase-returns/${id}`),
+
+  getByPurchaseOrder: (purchaseOrderId: string) =>
+    api.get(`/purchase-returns/po/${purchaseOrderId}`),
+
+  create: (data: {
+    purchaseOrderId: number;
+    items: Array<{
+      productId: string;
+      quantity: number;
+      reason: string;
+      condition: 'NEW' | 'OPENED' | 'DAMAGED';
+    }>;
+    reason: string;
+    notes?: string;
+  }) =>
+    api.post('/purchase-returns', data),
+
+  markRefundReceived: (id: string, date?: string) =>
+    api.post(`/purchase-returns/${id}/refund`, { refundDate: date }),
+
+  delete: (id: string) =>
+    api.delete(`/purchase-returns/${id}`),
 };
 
 // Helper to get full image URL

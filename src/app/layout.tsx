@@ -5,6 +5,7 @@ import "./print.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { PWAInstall } from "@/components/PWAInstall";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,12 @@ export default function RootLayout({
             <PWAInstall />
           </AuthProvider>
         </ThemeProvider>
+         {/* Midtrans Snap Script */}
+        <Script
+          src="https://app.sandbox.midtrans.com/snap/snap.js"
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

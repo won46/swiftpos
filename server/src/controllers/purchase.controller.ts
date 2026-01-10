@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
 
@@ -64,11 +64,17 @@ export const createPurchaseOrder = async (req: AuthRequest, res: Response) => {
 // Get all purchase orders
 export const getPurchaseOrders = async (req: Request, res: Response) => {
   try {
-    const { status, supplierId } = req.query;
+    const { status, supplierId, search } = req.query;
 
     const where: any = {};
     if (status) where.status = status;
     if (supplierId) where.supplierId = supplierId;
+    if (search) {
+      where.OR = [
+        { poNumber: { contains: search as string, mode: 'insensitive' } },
+        { supplier: { name: { contains: search as string, mode: 'insensitive' } } },
+      ];
+    }
 
     const purchaseOrders = await prisma.purchaseOrder.findMany({
       where,

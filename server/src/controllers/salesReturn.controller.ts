@@ -55,7 +55,7 @@ export const getAllSalesReturns = async (req: Request, res: Response) => {
         },
         user: {
           select: {
-            name: true,
+            fullName: true,
           },
         },
       },
@@ -91,7 +91,7 @@ export const getSalesReturnById = async (req: Request, res: Response) => {
         },
         user: {
           select: {
-            name: true,
+            fullName: true,
           },
         },
       },
@@ -204,13 +204,13 @@ export const createSalesReturn = async (req: Request, res: Response) => {
     let refundAmount = 0;
     const returnItems = items.map((item: any) => {
       const transactionItem = transaction.items.find((ti) => ti.productId === item.productId);
-      const subtotal = parseFloat(transactionItem!.price.toString()) * item.quantity;
+      const subtotal = parseFloat(transactionItem!.unitPrice.toString()) * item.quantity;
       refundAmount += subtotal;
 
       return {
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: transactionItem!.price,
+        unitPrice: transactionItem!.unitPrice,
         subtotal,
         reason: item.reason,
         condition: item.condition || 'OPENED',

@@ -1,7 +1,13 @@
 // Types for POS Application
 
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
+
 export type UserRole = 'ADMIN' | 'MANAGER' | 'CASHIER';
-export type PaymentMethod = 'CASH' | 'CARD' | 'QRIS' | 'DEBT';
+export type PaymentMethod = 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'VOID';
 
 export interface User {
@@ -147,6 +153,32 @@ export type ExpiryStatus = 'expired' | 'urgent' | 'warning' | 'normal' | 'no_exp
 export interface ProductWithExpiry extends Product {
   expiryStatus: ExpiryStatus;
   daysUntilExpiry: number | null;
+}
+
+export interface PurchaseOrderItem {
+  id: number;
+  purchaseOrderId: number;
+  productId: string;
+  product?: Product;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  poNumber: string;
+  supplierId: string;
+  supplier?: Supplier;
+  totalAmount: number;
+  status: 'PENDING' | 'RECEIVED' | 'CANCELLED';
+  receivedAt?: Date;
+  notes?: string;
+  createdBy: string;
+  user?: User;
+  createdAt: Date;
+  updatedAt: Date;
+  items: PurchaseOrderItem[];
 }
 
 // Returns

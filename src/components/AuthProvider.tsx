@@ -9,29 +9,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const validateSession = async () => {
       const token = localStorage.getItem('accessToken');
-      
-      // Public routes that don't require authentication
       const publicRoutes = ['/login'];
       const isPublicRoute = publicRoutes.includes(pathname);
 
-      if (!token && !isPublicRoute) {
-        // No token and trying to access protected route - redirect to login
-        router.push('/login');
+      if (!token) {
+        if (!isPublicRoute) router.push('/login');
+        else setIsReady(true);
         return;
       }
 
-      if (token && pathname === '/login') {
-        // Already logged in and trying to access login page - redirect to dashboard
+      if (pathname === '/login') {
         router.push('/dashboard');
         return;
       }
 
-      setIsReady(true);
+      // Verify if user exists in DB
+      try {
+        const { authAPI } = require('@/services/api'); // Dynamic import to avoid cycles if any
+        await authAPI.getMe();
+        setIsReady(true);
+      } catch (error: any) {
+        console.error('Session validation failed:', error);
+        // If 404 (User not found) or 401, clear session
+        if (error.response?.status === 404 || error.response?.status === 401) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          router.push('/login');
+        } else {
+          // Other errors (network), just allow (api interceptor will handle)
+          setIsReady(true);
+        }
+      }
     };
 
-    checkAuth();
+    validateSession();
   }, [pathname, router]);
 
   if (!isReady) {

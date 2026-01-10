@@ -105,8 +105,7 @@ export default function StockTakingPage() {
       for (const adj of adjustments) {
         await stockAPI.createAdjustment({
           productId: adj.productId,
-          type: adj.type,
-          quantity: adj.adjustment,
+          newQuantity: adj.newStock,
           reason: reason,
         });
       }

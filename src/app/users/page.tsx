@@ -99,7 +99,7 @@ export default function UsersPage() {
         await usersAPI.update(editingUser.id, {
           email: formData.email,
           fullName: formData.fullName,
-          role: formData.role,
+          role: formData.role as 'ADMIN' | 'MANAGER' | 'KASIR',
           isActive: formData.isActive,
           password: formData.password || undefined,
         });
@@ -113,7 +113,7 @@ export default function UsersPage() {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
-          role: formData.role,
+          role: formData.role as 'ADMIN' | 'MANAGER' | 'KASIR',
         });
       }
 

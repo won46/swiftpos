@@ -358,7 +358,7 @@ export const validateDiscount = async (req: Request, res: Response) => {
     if (discount.minPurchase && amount < parseFloat(discount.minPurchase.toString())) {
       return res.status(400).json({
         success: false,
-        message: `Minimum purchase of Rp ${discount.minPurchase.toLocaleString('id-ID')} is required`,
+        message: `Minimum purchase of Rp ${Number(discount.minPurchase).toLocaleString('id-ID')} is required`,
       });
     }
 

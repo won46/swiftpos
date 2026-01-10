@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout';
-import { SearchInput } from '@/components/ui';
+import { SearchInput, Button, Modal } from '@/components/ui';
 import { ProductGrid, CartPanel, PaymentModal } from '@/components/pos';
 import { PaymentMethod, Product, Category } from '@/types';
 import { productsAPI, transactionsAPI, categoriesAPI } from '@/services/api';
@@ -18,10 +18,11 @@ export default function POSPage() {
   const [isLoading, setIsLoading] = useState(true);
   
   // Barcode scanner state
-  const [barcodeInput, setBarcodeInput] = useState('');
   const [scanStatus, setScanStatus] = useState<'ready' | 'success' | 'error'>('ready');
   const [lastScannedProduct, setLastScannedProduct] = useState<string>('');
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const [notFoundBarcode, setNotFoundBarcode] = useState<string | null>(null);
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { addItem } = useCartStore();
 
   // Fetch products & categories
@@ -59,7 +60,7 @@ export default function POSPage() {
     setIsPaymentOpen(true);
   };
 
-  const handlePaymentComplete = async (paymentMethod: PaymentMethod, paidAmount: number) => {
+  const handlePaymentComplete = async (paymentMethod: PaymentMethod, paidAmount: number, splitPayments?: any[]) => {
     try {
       const {
         items,
@@ -87,6 +88,7 @@ export default function POSPage() {
         totalAmount: getTotal(),
         paidAmount,
         paymentMethod,
+        payments: splitPayments, // Pass split payments if any
       };
 
       // Save to database
@@ -125,37 +127,69 @@ export default function POSPage() {
       }
     } catch (error) {
       console.error('Product not found:', error);
-      setScanStatus('error');
-      setLastScannedProduct('Produk tidak ditemukan');
-      
-      // Reset status after 2 seconds
-      setTimeout(() => {
-        setScanStatus('ready');
-        setLastScannedProduct('');
-      }, 2000);
-    } finally {
-      setBarcodeInput('');
-      barcodeInputRef.current?.focus();
+      setNotFoundBarcode(barcode);
     }
   };
 
-  // Listen for Enter key (USB scanners send Enter after barcode)
+  const handleManualSearch = () => {
+    if (notFoundBarcode) {
+      setSearchQuery(notFoundBarcode);
+      setNotFoundBarcode(null);
+      // Small delay to ensure modal is closed and input is visible/interactive
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setNotFoundBarcode(null);
+    // Return focus to body so scanner can work again
+    document.body.focus();
+  };
+
+  // Global Barcode Listener
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && barcodeInput.trim() && document.activeElement === barcodeInputRef.current) {
-        e.preventDefault();
-        handleBarcodeSubmit(barcodeInput.trim());
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input field (search, quantity, or modal inputs)
+      const target = e.target as HTMLElement;
+      if (
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && 
+        !notFoundBarcode // Allow scanning even if modal is open? No, probably confusing.
+      ) {
+        return;
+      }
+      
+      // If modal is open, ignore scanner input to prevent infinite loops or confusion
+      if (notFoundBarcode) return;
+
+      const currentTime = Date.now();
+      
+      // If time between keys is too long, reset buffer (it's manual typing, not scanner)
+      if (currentTime - lastKeyTime > 100) {
+        buffer = '';
+      }
+      
+      lastKeyTime = currentTime;
+
+      if (e.key === 'Enter') {
+        if (buffer.trim()) {
+          e.preventDefault();
+          handleBarcodeSubmit(buffer.trim());
+          buffer = '';
+        }
+      } else if (e.key.length === 1) {
+        // Only append printable characters
+        buffer += e.key;
       }
     };
 
-    window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [barcodeInput]);
-
-  // Auto-focus barcode input on mount
-  useEffect(() => {
-    barcodeInputRef.current?.focus();
-  }, []);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [notFoundBarcode]); // depend on notFoundBarcode to pause listener when modal is open
 
   return (
     <DashboardLayout>
@@ -174,6 +208,7 @@ export default function POSPage() {
           <div className="mb-6 space-y-4">
             {/* Search Input */}
             <SearchInput
+              ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari produk berdasarkan nama atau SKU..."
@@ -205,16 +240,7 @@ export default function POSPage() {
               {scanStatus === 'error' && <XCircle className="text-red-500" size={20} />}
             </div>
             
-            {/* Hidden barcode input (always focused for USB scanner) */}
-            <input
-              ref={barcodeInputRef}
-              type="text"
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              className="sr-only" 
-              placeholder="Scan barcode..."
-              aria-label="Barcode scanner input"
-            />
+
           </div>
 
           {/* Products Grid */}
@@ -233,6 +259,36 @@ export default function POSPage() {
         onClose={() => setIsPaymentOpen(false)}
         onComplete={handlePaymentComplete}
       />
+
+      {/* Product Not Found Modal */}
+      <Modal
+        isOpen={!!notFoundBarcode}
+        onClose={handleCloseModal}
+        title="Produk Tidak Ditemukan"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
+              <Scan size={24} />
+            </div>
+            <p>
+              Barang dengan barcode <span className="font-mono font-bold bg-gray-100 px-2 py-0.5 rounded text-sm">{notFoundBarcode}</span> tidak ada di stok.
+            </p>
+            <p className="text-sm text-[var(--foreground-muted)]">
+              Apakah Anda ingin mencari produk ini secara manual?
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={handleCloseModal}>
+              Batal
+            </Button>
+            <Button onClick={handleManualSearch}>
+              Cari Manual
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }

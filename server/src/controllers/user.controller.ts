@@ -98,7 +98,7 @@ export const createUser = async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         fullName,
         role: role || 'KASIR',
       },
@@ -140,7 +140,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
     // Only update password if provided
     if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+      updateData.passwordHash = await bcrypt.hash(password, 10);
     }
 
     const user = await prisma.user.update({
@@ -169,8 +169,10 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
+import { AuthRequest } from '../middleware/auth.middleware';
+
 // Delete user
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 

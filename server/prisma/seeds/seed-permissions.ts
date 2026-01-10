@@ -47,16 +47,32 @@ async function seedRolePermissions() {
     { role: 'CASHIER', menuPath: '/transactions', menuLabel: 'Transaksi', canRead: true, canCreate: false, canUpdate: false, canDelete: false },
   ];
 
+  // Fetch all roles first
+  const roles = await prisma.role.findMany();
+  const roleMap = new Map(roles.map(r => [r.name, r.id]));
+
   for (const perm of permissions) {
+    const roleId = roleMap.get(perm.role);
+    
+    if (!roleId) {
+      console.warn(`Role ${perm.role} not found. Skipping permission for ${perm.menuPath}`);
+      continue;
+    }
+
+    const { role, ...permData } = perm;
+
     await prisma.rolePermission.upsert({
       where: {
-        role_menuPath: {
-          role: perm.role as any,
+        roleId_menuPath: {
+          roleId: roleId,
           menuPath: perm.menuPath,
         },
       },
-      create: perm as any,
-      update: perm,
+      create: {
+        ...permData,
+        roleId: roleId,
+      },
+      update: permData,
     });
   }
 

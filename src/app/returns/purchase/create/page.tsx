@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout';
 import { Button, SearchInput } from '@/components/ui';
 import { ArrowLeft, Search, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { purchasesAPI, purchaseReturnsAPI } from '@/services/api';
 
 interface PurchaseOrder {
   id: number;
@@ -51,19 +51,19 @@ export default function CreatePurchaseReturnPage() {
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchPurchaseOrders();
   }, []);
 
-  const fetchPurchaseOrders = async () => {
+  const fetchPurchaseOrders = async (query = '') => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/purchases`, {
-        params: { status: 'RECEIVED' },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const params: any = { status: 'RECEIVED' };
+      if (query) params.search = query;
+      
+      const response = await purchasesAPI.getAll(params);
       setPurchaseOrders(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch purchase orders:', error);
@@ -124,7 +124,6 @@ export default function CreatePurchaseReturnPage() {
 
     try {
       setIsSubmitting(true);
-      const token = localStorage.getItem('accessToken');
       
       const payload = {
         purchaseOrderId: selectedPO.id,
@@ -138,11 +137,7 @@ export default function CreatePurchaseReturnPage() {
         notes,
       };
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/purchase-returns`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await purchaseReturnsAPI.create(payload);
 
       alert('Retur pembelian berhasil dibuat! Stock sudah dikurangi.');
       router.push('/returns');
@@ -185,15 +180,34 @@ export default function CreatePurchaseReturnPage() {
           </Button>
           <h1 className="text-3xl font-bold mb-2 gradient-text">Buat Retur Pembelian</h1>
           <p className="text-[var(--foreground-muted)]">
-            {!selectedPO ? 'Pilih Purchase Order yang akan diretur' : 'Pilih produk dan jumlah yang akan diretur ke supplier'}
+            {!selectedPO ? 'Cari dan pilih Purchase Order yang akan diretur' : 'Pilih produk dan jumlah yang akan diretur ke supplier'}
           </p>
         </div>
 
         {!selectedPO ? (
           // Select Purchase Order
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Pilih Purchase Order</h2>
+            <h2 className="text-xl font-semibold mb-4">Cari Purchase Order</h2>
             
+            <div className="flex gap-3 mb-6">
+              <div className="flex-1">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Masukkan nomor PO atau nama supplier..."
+                  onKeyPress={(e) => e.key === 'Enter' && fetchPurchaseOrders(searchQuery)}
+                />
+              </div>
+              <Button
+                variant="primary"
+                icon={Search}
+                onClick={() => fetchPurchaseOrders(searchQuery)}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Mencari...' : 'Cari'}
+              </Button>
+            </div>
+
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
@@ -202,7 +216,7 @@ export default function CreatePurchaseReturnPage() {
               <div className="text-center py-12">
                 <Package className="mx-auto mb-4 text-[var(--foreground-muted)]" size={48} />
                 <p className="text-[var(--foreground-muted)]">
-                  Tidak ada purchase order yang bisa diretur
+                  Tidak ada purchase order yang ditemukan (Status: RECEIVED)
                 </p>
               </div>
             ) : (

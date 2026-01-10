@@ -16,7 +16,7 @@ const router = Router();
 // Public routes (for testing, in production should be protected)
 router.get('/', getProducts);
 router.get('/low-stock', getLowStockProducts);
-router.get('/by-barcode/:barcode', getProductByBarcode); // Must be before /:id route
+router.get('/barcode/:barcode', getProductByBarcode); // Must be before /:id route
 router.get('/:id', getProduct);
 
 // Protected routes (Admin/Manager only)

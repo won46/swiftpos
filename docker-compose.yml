@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://${SERVER_IP:-192.168.1.9}:${BACKEND_PORT:-5001}/api
+    container_name: pos-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://${SERVER_IP:-192.168.1.9}:${BACKEND_PORT:-5001}/api
+      - NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+    depends_on:
+      - backend
+    networks:
+      - pos-network
+
+    restart: always
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: pos-backend
+    ports:
+      - "${BACKEND_PORT:-5001}:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-pos_db}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-supersecretkeyChangeThisUsingComplexRandomString}
+      - JWT_EXPIRES_IN=1d
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-supersecretrefreshkeyChangeThisUsingComplexRandomString}
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - FRONTEND_URL=http://${SERVER_IP:-192.168.1.9}:${FRONTEND_PORT:-3000}
+      - ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000},http://${SERVER_IP:-192.168.1.9}:${FRONTEND_PORT:-3000}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pos-network
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    container_name: pos-db
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-pos_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pos-network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  pos-network:
+    driver: bridge

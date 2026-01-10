@@ -27,29 +27,33 @@ export const getApplicableDiscounts = async (req: Request, res: Response) => {
     const discounts = await prisma.discount.findMany({
       where: {
         isActive: true,
-        OR: [
-          // Universal discounts (no category, no specific products)
+        AND: [
           {
-            AND: [
-              { categoryId: null },
-              { applicableProducts: { isEmpty: true } },
+            OR: [
+              // Universal discounts (no category, no specific products)
+              {
+                AND: [
+                  { categoryId: null },
+                  { applicableProducts: { isEmpty: true } },
+                ],
+              },
+              // Category-specific
+              {
+                categoryId: product.categoryId,
+              },
+              // Product-specific
+              {
+                applicableProducts: { has: productId },
+              },
             ],
           },
-          // Category-specific
+          // Date filter
           {
-            categoryId: product.categoryId,
+            OR: [
+              { startDate: null },
+              { startDate: { lte: now } },
+            ],
           },
-          // Product-specific
-          {
-            applicableProducts: { has: productId },
-          },
-        ],
-        // Date filter
-        OR: [
-          { startDate: null },
-          { startDate: { lte: now } },
-        ],
-        AND: [
           {
             OR: [
               { endDate: null },
@@ -145,21 +149,25 @@ export const getBestDiscount = async (req: Request, res: Response) => {
     const discounts = await prisma.discount.findMany({
       where: {
         isActive: true,
-        OR: [
+        AND: [
           {
-            AND: [
-              { categoryId: null },
-              { applicableProducts: { isEmpty: true } },
+            OR: [
+              {
+                AND: [
+                  { categoryId: null },
+                  { applicableProducts: { isEmpty: true } },
+                ],
+              },
+              { categoryId: product.categoryId },
+              { applicableProducts: { has: productId } },
             ],
           },
-          { categoryId: product.categoryId },
-          { applicableProducts: { has: productId } },
-        ],
-        OR: [
-          { startDate: null },
-          { startDate: { lte: now } },
-        ],
-        AND: [
+          {
+            OR: [
+              { startDate: null },
+              { startDate: { lte: now } },
+            ],
+          },
           {
             OR: [
               { endDate: null },

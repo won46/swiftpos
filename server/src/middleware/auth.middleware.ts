@@ -30,6 +30,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       email: decoded.email,
       role: decoded.role,
     };
+    console.log(`[AuthMiddleware] Authenticated User: ${decoded.id} (${decoded.email})`);
 
     next();
   } catch (error) {

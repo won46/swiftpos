@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout';
 import { Button, SearchInput } from '@/components/ui';
 import { ArrowLeft, Search, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { transactionsAPI, salesReturnsAPI } from '@/services/api';
 
 interface Transaction {
   id: string;
@@ -58,11 +58,7 @@ export default function CreateSalesReturnPage() {
     
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
-        params: { search: searchQuery },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await transactionsAPI.getAll({ search: searchQuery });
       setTransactions(response.data.data || []);
     } catch (error) {
       console.error('Failed to search transactions:', error);
@@ -126,7 +122,6 @@ export default function CreateSalesReturnPage() {
 
     try {
       setIsSubmitting(true);
-      const token = localStorage.getItem('accessToken');
       
       const payload = {
         transactionId: selectedTransaction.id,
@@ -141,11 +136,7 @@ export default function CreateSalesReturnPage() {
         refundMethod,
       };
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/sales-returns`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await salesReturnsAPI.create(payload);
 
       alert('Retur berhasil dibuat!');
       router.push('/returns');

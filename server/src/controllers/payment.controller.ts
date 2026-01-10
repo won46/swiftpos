@@ -62,7 +62,7 @@ export const createQrisPayment = async (req: Request, res: Response) => {
     // Save payment record to database
     await prisma.payment.create({
       data: {
-        transactionId: '', // Will be updated when transaction is created
+        // transactionId will be linked later when transaction is created
         orderId: orderId,
         amount: Math.round(amount),
         paymentType: 'qris',
@@ -91,6 +91,80 @@ export const createQrisPayment = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create QRIS payment',
+    });
+  }
+};
+
+// Create Snap payment
+export const createSnapTransaction = async (req: Request, res: Response) => {
+  try {
+    const { amount, items, customerName } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid amount',
+      });
+    }
+
+    const orderId = generateOrderId();
+
+    // Prepare Midtrans parameters for Snap
+    const parameter = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: Math.round(amount),
+      },
+      credit_card: {
+        secure: true,
+      },
+      item_details: items?.map((item: any) => ({
+        id: item.productId,
+        price: Math.round(item.unitPrice),
+        quantity: item.quantity,
+        name: item.name?.substring(0, 50) || 'Product',
+      })) || [{
+        id: 'default',
+        price: Math.round(amount),
+        quantity: 1,
+        name: 'POS Transaction',
+      }],
+      customer_details: {
+        first_name: customerName || 'Guest',
+      },
+    };
+
+    // Create transaction via Midtrans Snap
+    // Use dynamic import or updated local import
+    const { snap } = require('../config/midtrans'); 
+    
+    const transaction = await snap.createTransaction(parameter);
+    const { token, redirect_url } = transaction;
+
+    // Save payment record to database
+    await prisma.payment.create({
+      data: {
+        orderId: orderId,
+        amount: Math.round(amount),
+        paymentType: 'snap',
+        status: 'pending',
+        gatewayResponse: transaction,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        orderId,
+        token,
+        redirectUrl: redirect_url,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error creating Snap transaction:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create Snap transaction',
     });
   }
 };

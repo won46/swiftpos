@@ -59,7 +59,7 @@ export const getAllPurchaseReturns = async (req: Request, res: Response) => {
         },
         user: {
           select: {
-            name: true,
+            fullName: true,
           },
         },
       },
@@ -96,7 +96,7 @@ export const getPurchaseReturnById = async (req: Request, res: Response) => {
         },
         user: {
           select: {
-            name: true,
+            fullName: true,
           },
         },
       },

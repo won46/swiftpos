@@ -157,7 +157,7 @@ model Transaction {
   payment         Payment?
   salesReturns    SalesReturn[]
   items           TransactionItem[]
-  debtPayments    DebtPayment[]
+  debtPayments    TransactionPayment[]
   user            User              @relation(fields: [userId], references: [id])
   customer        Customer?         @relation(fields: [customerId], references: [id])
 
@@ -181,7 +181,7 @@ model Customer {
   @@map("customers")
 }
 
-model DebtPayment {
+model TransactionPayment {
   id            String        @id @default(uuid())
   transactionId String        @map("transaction_id")
   amount        Decimal       @db.Decimal(12, 2)
@@ -190,12 +190,12 @@ model DebtPayment {
   notes         String?
   transaction   Transaction   @relation(fields: [transactionId], references: [id])
 
-  @@map("debt_payments")
+  @@map("transaction_payments")
 }
 
 model Payment {
   id              String      @id @default(uuid())
-  transactionId   String      @unique @map("transaction_id")
+  transactionId   String?     @unique @map("transaction_id")
   orderId         String      @unique @map("order_id")
   amount          Decimal     @db.Decimal(12, 2)
   paymentType     String      @map("payment_type")
@@ -206,7 +206,7 @@ model Payment {
   gatewayResponse Json?       @map("gateway_response")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
-  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
@@ -255,7 +255,7 @@ model PurchaseOrder {
   items          PurchaseOrderItem[]
   user           User                @relation(fields: [createdBy], references: [id])
   supplier       Supplier            @relation(fields: [supplierId], references: [id])
-  PurchaseReturn PurchaseReturn[]
+  purchaseReturns PurchaseReturn[]
 
   @@map("purchase_orders")
 }
@@ -377,6 +377,7 @@ enum PaymentMethod {
   CARD
   QRIS
   DEBT
+  SPLIT
 }
 
 enum PaymentStatus {

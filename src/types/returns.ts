@@ -1,3 +1,5 @@
+import type { Product, User, Transaction, PurchaseOrder, Supplier } from './index';
+
 // Append to existing types
 export type RefundMethod = 'CASH' | 'TRANSFER';
 export type ReturnStatus = 'APPROVED' | 'COMPLETED';

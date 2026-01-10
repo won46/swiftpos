@@ -27,39 +27,67 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       paidAmount,
       paymentMethod,
       dueDate,
+      payments, // Array of { method: string, amount: number, notes?: string }
     } = req.body;
 
     const userId = req.user!.id;
+    console.log(`[CreateTransaction] Processing for User ID: ${userId}`);
+    console.log(`[CreateTransaction] Payload:`, { paymentMethod, totalAmount, payments });
     const invoiceNumber = generateInvoiceNumber();
     
-    // Default values for Debt
+    // Default values
     let paymentStatus: 'PAID' | 'UNPAID' | 'PARTIAL' = 'PAID';
     let remainingAmount = 0;
     
-    // Handle Debt Logic
-    if (paymentMethod === 'DEBT') {
-      if (!customerId) {
+    // Calculate total paid and remaining based on method
+    let totalPaid = 0;
+
+    if (paymentMethod === 'SPLIT') {
+      // For SPLIT, sum up all payments
+      if (!Array.isArray(payments) || payments.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Customer is required for debt transaction (Kasbon)',
+          message: 'Payments array is required for SPLIT payment method',
         });
       }
-
-      // Calculate remaining amount
-      const paid = Number(paidAmount) || 0;
-      remainingAmount = Number(totalAmount) - paid;
-      
-      if (remainingAmount <= 0) {
-        paymentStatus = 'PAID';
-      } else if (paid > 0) {
-        paymentStatus = 'PARTIAL';
-      } else {
-        paymentStatus = 'UNPAID';
-      }
+      totalPaid = payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+    } else {
+      // For Single Payment (CASH, CARD, QRIS, DEBT)
+      totalPaid = Number(paidAmount) || 0;
     }
 
-    const changeAmount = (paymentMethod !== 'DEBT') 
-      ? (paidAmount ? Number(paidAmount) - Number(totalAmount) : 0) 
+    // Logic for remaining amount
+    if (paymentMethod === 'DEBT') {
+        // Full debt or partial debt (logic handled by frontend usually sending paidAmount < total)
+        remainingAmount = Number(totalAmount) - totalPaid;
+    } else if (paymentMethod === 'SPLIT') {
+        remainingAmount = Number(totalAmount) - totalPaid;
+    } else {
+        // Standard payment (CASH, QRIS, CARD) - usually full payment
+        // But if paidAmount < total (and not DEBT), technically it's partial, but standard POS usually treats standard methods as full or 'change returned'
+        remainingAmount = Math.max(0, Number(totalAmount) - totalPaid);
+    }
+
+    // Determine status
+    if (remainingAmount <= 0) {
+      paymentStatus = 'PAID';
+      remainingAmount = 0; // Ensure no negative remaining
+    } else if (totalPaid > 0) {
+      paymentStatus = 'PARTIAL';
+    } else {
+      paymentStatus = 'UNPAID';
+    }
+    
+    // For DEBT validation
+    if (remainingAmount > 0 && !customerId) {
+       return res.status(400).json({
+          success: false,
+          message: 'Customer is required for transactions with remaining debt',
+        });
+    }
+
+    const changeAmount = (remainingAmount === 0 && totalPaid > Number(totalAmount)) 
+      ? totalPaid - Number(totalAmount) 
       : 0;
 
     // Start transaction
@@ -75,9 +103,9 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
           taxAmount,
           discountAmount,
           totalAmount,
-          paidAmount: paidAmount || 0,
+          paidAmount: totalPaid,
           remainingAmount,
-          changeAmount: changeAmount > 0 ? changeAmount : 0,
+          changeAmount,
           paymentMethod,
           paymentStatus,
           status: 'COMPLETED',
@@ -108,9 +136,38 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
           },
         });
       }
+
+      // 3. Record Payments
+      if (paymentMethod === 'SPLIT') {
+          for (const p of payments) {
+             await tx.transactionPayment.create({
+                data: {
+                    transactionId: newTransaction.id,
+                    amount: Number(p.amount),
+                    paymentMethod: p.method,
+                    notes: p.notes || 'Split Bill',
+                    paymentDate: new Date()
+                }
+             });
+          }
+      } else if (totalPaid > 0) {
+          // Record single payment (CASH, QRIS, etc)
+          // For DEBT, we only record what was PAID.
+           await tx.transactionPayment.create({
+              data: {
+                  transactionId: newTransaction.id,
+                  amount: Number(totalPaid), // Only record the paid portion
+                  paymentMethod: paymentMethod === 'DEBT' ? 'CASH' : paymentMethod, // If DEBT but has paidAmount, assume DP is CASH unless specified? Actually standard DEBT usually implies 0 DP or DP via Cash. Let's assume 'CASH' or rely on frontend? 
+                  // Simplification: If DEBT, the initial payment is considered CASH/Down Payment. 
+                  // If standard payment, it matches the method.
+                  notes: 'Initial Payment',
+                  paymentDate: new Date()
+              }
+           });
+      }
       
-      // 3. Update Customer Current Debt if this is a Debt transaction
-      if (paymentMethod === 'DEBT' && customerId && remainingAmount > 0) {
+      // 4. Update Customer Current Debt
+      if (remainingAmount > 0 && customerId) {
         await tx.customer.update({
           where: { id: customerId },
           data: {
@@ -155,7 +212,7 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Repay Debt Endpoint
+// Repay Debt (Add Payment) Endpoint
 export const repayDebt = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params; // Transaction ID
@@ -187,8 +244,8 @@ export const repayDebt = async (req: AuthRequest, res: Response) => {
 
     // Start DB Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // 2. Create DebtPayment Record
-      await tx.debtPayment.create({
+      // 2. Create TransactionPayment Record (renamed from DebtPayment)
+      await tx.transactionPayment.create({
         data: {
           transactionId: id,
           amount: repayAmount,
@@ -232,14 +289,14 @@ export const repayDebt = async (req: AuthRequest, res: Response) => {
     res.json({
       success: true,
       data: result,
-      message: 'Debt payment successful'
+      message: 'Payment added successfully'
     });
 
   } catch (error: any) {
     console.error('Repay debt error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to process debt repayment',
+      message: error.message || 'Failed to process payment',
     });
   }
 };

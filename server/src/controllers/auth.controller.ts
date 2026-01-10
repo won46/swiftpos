@@ -47,7 +47,7 @@ export const login = async (req: Request, res: Response) => {
         role: user.role.name,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' } as jwt.SignOptions
     );
 
     const refreshToken = jwt.sign(
@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
       },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
     res.json({
@@ -119,7 +119,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         role: user.role.name,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' } as jwt.SignOptions
     );
 
     res.json({
