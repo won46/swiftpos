@@ -26,7 +26,9 @@ import expiryRoutes from './routes/expiry.routes';
 import salesReturnRoutes from './routes/salesReturn.routes';
 import purchaseReturnRoutes from './routes/purchaseReturn.routes';
 import rolePermissionRoutes from './routes/rolePermission.routes';
+
 import customerRoutes from './routes/customer.routes';
+import dataManagementRoutes from './routes/dataManagement.routes';
 
 const app: Application = express();
 const httpServer = createServer(app);
@@ -91,6 +93,7 @@ app.use('/api/sales-returns', salesReturnRoutes);
 app.use('/api/purchase-returns', purchaseReturnRoutes);
 app.use('/api/role-permissions', rolePermissionRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/data', dataManagementRoutes);
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

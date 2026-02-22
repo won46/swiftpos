@@ -114,6 +114,8 @@ model Product {
   isActive           Boolean              @default(true) @map("is_active")
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
+  size               String?
+  color              String?
   baseUnit           String               @default("pcs") @map("base_unit")
   pricePerUnit       Json?                @map("price_per_unit")
   purchaseUnit       String               @default("pcs") @map("purchase_unit")

@@ -22,6 +22,7 @@ import {
   Tag,
   AlertTriangle,
   RotateCcw,
+  Database,
 } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 
@@ -45,6 +46,7 @@ const menuItems = [
   { icon: Package, label: 'Laporan Inventory', href: '/reports/inventory', roles: ['ADMIN', 'MANAGER'] },
   { icon: Users, label: 'Pengguna', href: '/users', roles: ['ADMIN'] },
   { icon: Shield, label: 'Role Permissions', href: '/settings/permissions', roles: ['ADMIN'] },
+  { icon: Database, label: 'Manajemen Data', href: '/settings/data', roles: ['ADMIN'] },
   { icon: Settings, label: 'Pengaturan', href: '/settings', roles: ['ADMIN', 'MANAGER'] },
 ];
 

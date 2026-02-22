@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
-import { coreApi } from '../config/midtrans';
+import { coreApi, snap } from '../config/midtrans';
 import { io } from '../index';
 import crypto from 'crypto';
 
@@ -135,9 +135,6 @@ export const createSnapTransaction = async (req: Request, res: Response) => {
     };
 
     // Create transaction via Midtrans Snap
-    // Use dynamic import or updated local import
-    const { snap } = require('../config/midtrans'); 
-    
     const transaction = await snap.createTransaction(parameter);
     const { token, redirect_url } = transaction;
 

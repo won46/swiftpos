@@ -92,6 +92,25 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="product-card-name" title={product.name}>
           {product.name}
         </h3>
+
+        <div className="flex flex-wrap gap-1 mb-1.5 overflow-hidden">
+           {product.category?.name && (
+              <span className="text-[9px] font-medium text-[var(--foreground-muted)] bg-[var(--surface-hover)] px-1.5 py-0.5 rounded-full border border-[var(--border)] max-w-full truncate">
+                {product.category.name}
+              </span>
+           )}
+           {product.size && (
+              <span className="text-[9px] font-medium text-[var(--foreground)] bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)]">
+                {product.size}
+              </span>
+           )}
+           {product.color && (
+              <span className="text-[9px] font-medium text-[var(--foreground)] bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full border border-[var(--border)] shadow-sm" style={{ backgroundColor: product.color }}></span>
+                {product.color}
+              </span>
+           )}
+        </div>
         
         <div className="flex items-center justify-between">
           <span className="product-card-price">{formatPrice(Number(product.price))}</span>

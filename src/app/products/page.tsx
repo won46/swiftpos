@@ -32,6 +32,9 @@ export default function ProductsPage() {
     categoryId: '',
     description: '',
     imageUrl: '',
+
+    size: '',
+    color: '',
     // Unit conversion fields
     purchaseUnit: 'pcs',
     purchaseUnitQty: '1',
@@ -97,6 +100,9 @@ export default function ProductsPage() {
         categoryId: product.categoryId?.toString() || '',
         description: product.description || '',
         imageUrl: product.imageUrl || '',
+
+        size: product.size || '',
+        color: product.color || '',
         purchaseUnit: (product as any).purchaseUnit || 'pcs',
         purchaseUnitQty: ((product as any).purchaseUnitQty || 1).toString(),
         saleUnits: saleUnits,
@@ -119,6 +125,9 @@ export default function ProductsPage() {
         categoryId: '',
         description: '',
         imageUrl: '',
+
+        size: '',
+        color: '',
         purchaseUnit: 'pcs',
         purchaseUnitQty: '1',
         saleUnits: ['pcs'],
@@ -175,6 +184,9 @@ export default function ProductsPage() {
         categoryId: Number(formData.categoryId),
         description: formData.description || null,
         imageUrl: imageUrl || null,
+
+        size: formData.size || null,
+        color: formData.color || null,
         // Unit conversion fields
         purchaseUnit: formData.purchaseUnit,
         purchaseUnitQty: Number(formData.purchaseUnitQty),
@@ -322,6 +334,8 @@ export default function ProductsPage() {
                   <tr>
                     <th>Produk</th>
                     <th>SKU</th>
+                    <th>Ukuran</th>
+                    <th>Warna</th>
                     <th>Kategori</th>
                     <th>Harga Jual</th>
                     <th>Harga Beli</th>
@@ -340,6 +354,8 @@ export default function ProductsPage() {
                     >
                       <td className="font-medium">{product.name}</td>
                       <td className="text-[var(--foreground-muted)]">{product.sku}</td>
+                      <td>{product.size || '-'}</td>
+                      <td>{product.color || '-'}</td>
                       <td>{product.category?.name || '-'}</td>
                       <td className="font-semibold">{formatPrice(product.price)}</td>
                       <td className="text-[var(--foreground-muted)]">
@@ -414,6 +430,33 @@ export default function ProductsPage() {
                 placeholder="SKU001"
               />
             </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Ukuran</label>
+            <Input
+              value={formData.size}
+              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+              placeholder="Contoh: S, M, L, XL, XXL"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Warna</label>
+            <Input
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              placeholder="Contoh: Merah, Biru, Hijau"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Warna</label>
+            <Input
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              placeholder="Contoh: Merah, Biru, Hijau"
+            />
           </div>
 
           <div>

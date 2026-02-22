@@ -160,7 +160,33 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                       <span className="text-sm">📦</span>
                     )}
                   </div>
-                  <p className="flex-1 text-sm font-medium leading-tight">{item.product.name}</p>
+                  <p 
+                    className="flex-1 text-sm font-medium leading-tight"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {item.product.name}
+                  </p>
+                  {(item.product.size || item.product.color) && (
+                    <div className="flex gap-1.5 mt-0.5">
+                      {item.product.size && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-hover)] text-[var(--foreground-muted)] border border-[var(--border)]">
+                          {item.product.size}
+                        </span>
+                      )}
+                      {item.product.color && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-hover)] text-[var(--foreground-muted)] border border-[var(--border)] flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.product.color }}></span>
+                          {item.product.color}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <button
                     onClick={() => removeItem(item.productId, unitType)}
                     className="text-[var(--danger)] hover:bg-[var(--danger-bg)] p-1 rounded transition-colors flex-shrink-0"

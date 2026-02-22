@@ -569,15 +569,15 @@ tr:hover td {
 /* ===== PRODUCT GRID ===== */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
 }
 
 .product-card {
   background: var(--background-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -592,7 +592,7 @@ tr:hover td {
   aspect-ratio: 1;
   background: var(--background-tertiary);
   border-radius: var(--radius-md);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -600,31 +600,34 @@ tr:hover td {
 }
 
 .product-card-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   margin-bottom: 4px;
-  white-space: nowrap;
+  /* Multi-line truncation */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
+  min-height: 2.6em; /* Ensure consistent height for 2 lines */
 }
 
 .product-card-price {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--primary);
 }
 
 /* ===== CART PANEL ===== */
 .cart-panel {
-  width: 380px;
-  height: 100vh;
+  width: 320px;
+  height: 100%;
   background: var(--background-secondary);
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: fixed;
-  right: 0;
-  top: 0;
+  /* Fixed positioning removed to prevent overlap */
 }
 
 .cart-item {

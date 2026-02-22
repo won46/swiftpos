@@ -15,6 +15,7 @@ import {
   Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PrinterSetup } from '@/components/settings/PrinterSetup';
 
 interface Settings {
   storeName: string;
@@ -132,6 +133,9 @@ export default function SettingsPage() {
               </div>
             </a>
           )}
+
+          {/* Printer Setup */}
+          <PrinterSetup />
 
           {/* Store Information */}
           <div className="card">

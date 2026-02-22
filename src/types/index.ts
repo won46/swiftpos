@@ -57,6 +57,8 @@ export interface Product {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  size?: string;
+  color?: string;
   // Expiry tracking
   expiryDate?: Date;
   manufactureDate?: Date;

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { io } from '../index';
+import { generateBarcode } from '../utils/barcode';
 
 // Get all products with filtering
 export const getProducts = async (req: Request, res: Response) => {
@@ -81,7 +82,7 @@ export const getProduct = async (req: Request, res: Response) => {
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { 
-      name, sku, price, stockQuantity, categoryId, purchaseUnit 
+      name, sku, price, stockQuantity, categoryId, purchaseUnit, size, color, barcode
     } = req.body;
 
     // Validate required fields
@@ -115,10 +116,28 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
 
+    // Generate Barcode if not provided
+    let finalBarcode = barcode;
+    if (!finalBarcode) {
+      finalBarcode = await generateBarcode();
+    } else {
+        // Check if provided barcode exists
+        const existingBarcode = await prisma.product.findUnique({
+            where: { barcode: finalBarcode },
+        });
+        if (existingBarcode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Barcode already exists',
+            });
+        }
+    }
+
     const product = await prisma.product.create({
       data: {
         ...req.body,
         sku: finalSku,
+        barcode: finalBarcode,
       },
       include: {
         category: true,

@@ -1,6 +1,19 @@
+
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+// Determine API URL (Client-side vs Server-side)
+const getBaseUrl = () => {
+    // If running in browser, construct URL from current hostname to make image portable
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        const port = '5001'; // Backend port is fixed
+        return `http://${hostname}:${port}/api`;
+    }
+    // Server-side fallback (Build time or SSR)
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+};
+
+const API_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_URL,
@@ -240,6 +253,7 @@ export const purchasesAPI = {
       productId: string;
       quantity: number;
       unitPrice: number;
+      totalPrice?: number; // Added optional property
     }>;
     notes?: string;
   }) =>
@@ -525,6 +539,7 @@ export const purchaseReturnsAPI = {
     }>;
     reason: string;
     notes?: string;
+    refundMethod: 'CASH' | 'TRANSFER'; // Added refundMethod
   }) =>
     api.post('/purchase-returns', data),
 
@@ -535,9 +550,27 @@ export const purchaseReturnsAPI = {
     api.delete(`/purchase-returns/${id}`),
 };
 
+// Data Management API
+export const dataManagementAPI = {
+  resetDatabase: () =>
+    api.post('/data/reset'),
+  
+  importExcel: () =>
+    api.post('/data/import-excel'),
+
+  generateBarcodes: () =>
+    api.post('/data/generate-barcodes'),
+};
+
+
 // Helper to get full image URL
 export const getImageUrl = (imageUrl?: string | null) => {
   if (!imageUrl) return null;
   if (imageUrl.startsWith('http')) return imageUrl;
-  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${imageUrl}`;
+  // Use dynamic base URL
+  const baseUrl = (typeof window !== 'undefined') 
+      ? `http://${window.location.hostname}:5001`
+      : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001');
+      
+  return `${baseUrl}${imageUrl}`;
 };

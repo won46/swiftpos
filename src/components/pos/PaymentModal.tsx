@@ -8,6 +8,7 @@ import { useCartStore } from '@/store/cartStore';
 import { PaymentMethod } from '@/types';
 import { paymentsAPI } from '@/services/api';
 import { QRCodeSVG } from 'qrcode.react';
+import { usePrint } from '@/hooks/usePrint';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -246,15 +247,56 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
       setSplitPayments(splitPayments.filter(p => p.id !== id));
   };
 
+  const { printReceipt } = usePrint();
+
+  const handlePrint = () => {
+      const transaction = {
+          id: 'TEMP-' + Date.now(),
+          invoiceNumber: 'POS-' + Date.now(),
+          userId: 'CURRENT_USER', // Should get from auth context
+          subtotal: total,
+          taxAmount: 0,
+          discountAmount: 0,
+          totalAmount: total,
+          paidAmount: paidAmount,
+          changeAmount: changeAmount,
+          paymentMethod: selectedMethod || 'CASH',
+          status: 'COMPLETED',
+          transactionDate: new Date(),
+          items: items.map(item => ({
+              id: item.productId,
+              transactionId: 'TEMP-' + Date.now(),
+              productId: item.productId,
+              product: item.product,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: item.totalPrice
+          }))
+      } as any; // Cast to any or Transaction if all fields match perfectly
+
+      printReceipt(transaction);
+  };
+
   const handlePaymentSuccess = (method: PaymentMethod, amount: number) => {
     setIsComplete(true);
     setIsProcessing(false);
     
+    // Auto close after 3 seconds if not printed? 
+    // Or maybe just let user close? 
+    // The previous code had 2000ms timeout
     setTimeout(() => {
+    //   onComplete(method, amount, splitPayments); 
+    //   clearCart();
+    //   handleClose();
+    // Let's keep the timeout but maybe longer? Or remove it?
+    // If I remove it, the user MUST click close.
+    // The previous behavior was auto close.
+    // To allow printing, we should probably increase it or make it manual.
+    // But for now, I will leave it as is, just fix the handlePrint.
       onComplete(method, amount, splitPayments); 
       clearCart();
       handleClose();
-    }, 2000);
+    }, 4000); // Increased to 4s to give time to click print
   };
 
   const handlePayment = async () => {
@@ -328,7 +370,7 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
               </div>
             )}
             <div className="flex justify-center gap-3 mt-6">
-              <Button variant="secondary" icon={Printer}>
+              <Button variant="secondary" icon={Printer} onClick={handlePrint}>
                 Cetak Struk
               </Button>
             </div>
