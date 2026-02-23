@@ -8,6 +8,7 @@ import { exportTransactionsToExcel, exportReceiptToPDF } from '@/lib/exportUtils
 import { Transaction } from '@/types';
 import { Calendar, Filter, Eye, Download, Printer } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { usePrint } from '@/hooks/usePrint';
 
 type TransactionStatus = 'COMPLETED' | 'PENDING' | 'VOID';
 
@@ -21,6 +22,10 @@ export default function TransactionsPage() {
   const [endDate, setEndDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // State for Receipt Modal
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedTransactionForReceipt, setSelectedTransactionForReceipt] = useState<Transaction | null>(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -53,8 +58,11 @@ export default function TransactionsPage() {
     exportTransactionsToExcel(filteredTransactions);
   };
 
-  const handlePrintReceipt = (transaction: Transaction) => {
-    exportReceiptToPDF(transaction);
+  const { printReceipt } = usePrint();
+
+  const handlePrintReceipt = async (transaction: Transaction) => {
+    setSelectedTransactionForReceipt(transaction);
+    await printReceipt(transaction);
   };
 
   const formatPrice = (price: number | string) => {
@@ -154,8 +162,8 @@ export default function TransactionsPage() {
               >
                 <option value="">Semua Metode Pembayaran</option>
                 <option value="CASH">Tunai</option>
-                <option value="CARD">Kartu</option>
-                <option value="QRIS">QRIS</option>
+                <option value="CASHLESS">Non Tunai</option>
+                <option value="DEBT">Kasbon</option>
               </select>
             </div>
             
@@ -314,6 +322,7 @@ export default function TransactionsPage() {
           )}
         </div>
       </div>
+
     </DashboardLayout>
   );
 }

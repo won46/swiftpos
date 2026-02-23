@@ -365,9 +365,8 @@ export default function CustomerDetailPage() {
                      onChange={(e) => setRepayMethod(e.target.value as PaymentMethod)}
                      className="input w-full"
                   >
-                     <option value="CASH">Tunai</option>
-                     <option value="CARD">Transfer / Kartu</option>
-                     <option value="QRIS">QRIS</option>
+                     <option value="CASHLESS">Non Tunai</option>
+                     <option value="TRANSFER">Transfer</option>
                   </select>
                </div>
                

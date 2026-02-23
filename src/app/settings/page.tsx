@@ -40,6 +40,18 @@ export default function SettingsPage() {
     autoPrintReceipt: false,
   });
 
+  useEffect(() => {
+    const savedSettingsStr = localStorage.getItem('pos_settings');
+    if (savedSettingsStr) {
+      try {
+        const parsed = JSON.parse(savedSettingsStr);
+        setSettings(prev => ({ ...prev, ...parsed }));
+      } catch (e) {
+        console.error('Failed to parse saved settings', e);
+      }
+    }
+  }, []);
+
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 

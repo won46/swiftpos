@@ -179,7 +179,23 @@ export const checkPaymentStatus = async (req: Request, res: Response) => {
     }
 
     // Get status from Midtrans
-    const statusResponse = await coreApi.transaction.status(orderId);
+    let statusResponse: any;
+    try {
+      statusResponse = await coreApi.transaction.status(orderId);
+    } catch (apiError: any) {
+      // If Midtrans returns 404, it means the transaction exists in Snap but hasn't been fully processed/paid yet.
+      // We should treat this as 'pending' rather than throwing a 500 error.
+      if (apiError.httpStatusCode === 404 || apiError.message?.includes('404')) {
+        return res.json({
+          success: true,
+          data: {
+            orderId,
+            transactionStatus: 'pending',
+          },
+        });
+      }
+      throw apiError; // Re-throw other errors
+    }
 
     // Update payment record
     const payment = await prisma.payment.findUnique({

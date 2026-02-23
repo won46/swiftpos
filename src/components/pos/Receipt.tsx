@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Transaction } from '@/types';
 
 interface ReceiptProps {
@@ -25,14 +26,37 @@ export function Receipt({ transaction }: ReceiptProps) {
     }).format(typeof date === 'string' ? new Date(date) : date);
   };
 
+  // Local state to store settings
+  const [settings, setSettings] = useState<any>({
+    storeName: 'SWIFTPOS',
+    storeAddress: 'Jl. Raya Bisnis No. 123, Jakarta',
+    storePhone: '021-12345678'
+  });
+
+  useEffect(() => {
+    // Load store settings from local storage
+    const settingsStr = localStorage.getItem('pos_settings');
+    if (settingsStr) {
+      try {
+        const parsed = JSON.parse(settingsStr);
+        setSettings({
+          storeName: parsed.storeName || 'SWIFTPOS',
+          storeAddress: parsed.storeAddress || 'Jl. Raya Bisnis No. 123, Jakarta',
+          storePhone: parsed.storePhone || ''
+        });
+      } catch (e) {
+        console.error('Failed to parse settings');
+      }
+    }
+  }, []);
+
   return (
     <div className="receipt-container">
       {/* Header */}
       <div className="receipt-header">
-        <h1>SWIFTPOS</h1>
-        <p>Modern Point of Sales System</p>
-        <p>Jl. Raya Bisnis No. 123, Jakarta</p>
-        <p>Telp: (021) 1234-5678</p>
+        <h1>{settings.storeName}</h1>
+        <p>{settings.storeAddress}</p>
+        {settings.storePhone && <p>Telp: {settings.storePhone}</p>}
       </div>
 
       <div className="receipt-divider">================================</div>

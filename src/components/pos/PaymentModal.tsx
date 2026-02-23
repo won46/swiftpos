@@ -9,6 +9,7 @@ import { PaymentMethod } from '@/types';
 import { paymentsAPI } from '@/services/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { usePrint } from '@/hooks/usePrint';
+import { ReceiptModal } from './ReceiptModal';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -18,9 +19,7 @@ interface PaymentModalProps {
 
 const paymentMethods = [
   { id: 'CASH' as PaymentMethod, label: 'Tunai', icon: Banknote, color: 'var(--success)' },
-  { id: 'CARD' as PaymentMethod, label: 'Kartu', icon: CreditCard, color: 'var(--info)' },
-  { id: 'QRIS' as PaymentMethod, label: 'QRIS', icon: QrCode, color: 'var(--primary)' },
-  { id: 'CASHLESS' as PaymentMethod, label: 'Cashless', icon: CreditCard, color: '#10B981' },
+  { id: 'CASHLESS' as PaymentMethod, label: 'Non Tunai', icon: CreditCard, color: '#10B981' },
   { id: 'DEBT' as PaymentMethod, label: 'Kasbon', icon: Clock, color: 'var(--warning)' },
   { id: 'SPLIT' as PaymentMethod, label: 'Pisah Bayar', icon: CheckCircle, color: '#8B5CF6' },
 ];
@@ -196,8 +195,16 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
         }
 
       } catch (error: any) {
-        console.error('Failed to create Snap transaction:', error);
-        const message = error.response?.data?.message || 'Gagal membuat transaksi. Silakan coba lagi.';
+        console.error('Failed to create transaction:', error);
+        let message = error.response?.data?.message || 'Gagal membuat transaksi. Silakan coba lagi.';
+        
+        // Handle specific Midtrans errors
+        if (error.response?.status === 402 || message.includes('Payment channel is not activated')) {
+          message = 'Saluran pembayaran belum aktif di akun Midtrans Production. Harap selesaikan verifikasi bisnis Anda di Dashboard Midtrans atau gunakan Mode Sandbox.';
+        } else if (error.response?.status === 401 || message.includes('Unknown Merchant server_key')) {
+          message = 'Kunci API Midtrans tidak valid. Pastikan Kunci Server / Kunci Klien sesuai dengan Mode (Production/Sandbox).';
+        }
+
         setQrisError(message);
       } finally {
         setIsProcessing(false);
@@ -263,22 +270,22 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
 
   const { printReceipt } = usePrint();
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const transaction = {
       id: 'TEMP-' + Date.now(),
       invoiceNumber: 'POS-' + Date.now(),
-      userId: 'CURRENT_USER', // Should get from auth context
+      userId: 'CURRENT_USER',
       subtotal: total,
       taxAmount: 0,
       discountAmount: 0,
       totalAmount: total,
-      paidAmount: paidAmount,
+      paidAmount: selectedMethod === 'SPLIT' ? total : paidAmount,
       changeAmount: changeAmount,
       paymentMethod: selectedMethod || 'CASH',
-      status: 'COMPLETED',
+      status: 'COMPLETED' as any, // Quick fix, could import TransactionStatus if we want
       transactionDate: new Date(),
-      items: items.map(item => ({
-        id: item.productId,
+      items: items.map((item, index) => ({
+        id: `temp-item-${index}`,
         transactionId: 'TEMP-' + Date.now(),
         productId: item.productId,
         product: item.product,
@@ -286,31 +293,32 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
         unitPrice: item.unitPrice,
         totalPrice: item.totalPrice
       }))
-    } as any; // Cast to any or Transaction if all fields match perfectly
-
-    printReceipt(transaction);
+    };
+    
+    // Attempt physical print
+    await printReceipt(transaction);
+    
+    // Close cart/modal after print
+    if (isComplete) {
+      clearCart();
+      handleClose();
+    }
   };
 
   const handlePaymentSuccess = (method: PaymentMethod, amount: number) => {
     setIsComplete(true);
     setIsProcessing(false);
 
-    // Auto close after 3 seconds if not printed? 
-    // Or maybe just let user close? 
-    // The previous code had 2000ms timeout
-    setTimeout(() => {
-      //   onComplete(method, amount, splitPayments); 
-      //   clearCart();
-      //   handleClose();
-      // Let's keep the timeout but maybe longer? Or remove it?
-      // If I remove it, the user MUST click close.
-      // The previous behavior was auto close.
-      // To allow printing, we should probably increase it or make it manual.
-      // But for now, I will leave it as is, just fix the handlePrint.
-      onComplete(method, amount, splitPayments);
-      clearCart();
-      handleClose();
-    }, 4000); // Increased to 4s to give time to click print
+    // Force close Midtrans Snap popup if it's still open
+    if (window.snap && typeof window.snap.hide === 'function') {
+      window.snap.hide();
+    }
+
+    // Langsung simpan ke database
+    onComplete(method, amount, splitPayments);
+
+    // Otomatis tampilkan struk
+    handlePrint();
   };
 
   const handlePayment = async () => {
@@ -414,7 +422,7 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
 
             {/* Payment Method Selection */}
             <p className="text-sm font-medium mb-3">Metode Pembayaran</p>
-            <div className="grid grid-cols-3 gap-2 mb-6">
+            <div className="grid grid-cols-2 gap-2 mb-6">
               {paymentMethods.map((method) => (
                 <motion.button
                   key={method.id}
@@ -480,8 +488,7 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
                         onChange={(e) => setCurrentSplitMethod(e.target.value as PaymentMethod)}
                       >
                         <option value="CASH">Tunai</option>
-                        <option value="CARD">Kartu</option>
-                        <option value="QRIS">QRIS</option>
+                        <option value="CASHLESS">Non Tunai</option>
                       </select>
                     </div>
                     <div className="flex-1">
@@ -641,6 +648,7 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
           </motion.div>
         )}
       </AnimatePresence>
+
     </Modal>
   );
 }
