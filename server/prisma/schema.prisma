@@ -380,6 +380,7 @@ enum PaymentMethod {
   QRIS
   DEBT
   SPLIT
+  CASHLESS
 }
 
 enum PaymentStatus {

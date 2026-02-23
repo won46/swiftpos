@@ -7,7 +7,7 @@ declare global {
 }
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'CASHIER';
-export type PaymentMethod = 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT';
+export type PaymentMethod = 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT' | 'CASHLESS';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'VOID';
 
 export interface User {

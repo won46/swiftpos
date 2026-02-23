@@ -62,7 +62,7 @@ export default function CreatePurchaseReturnPage() {
       setIsLoading(true);
       const params: any = { status: 'RECEIVED' };
       if (query) params.search = query;
-      
+
       const response = await purchasesAPI.getAll(params);
       setPurchaseOrders(response.data.data || []);
     } catch (error) {
@@ -124,7 +124,7 @@ export default function CreatePurchaseReturnPage() {
 
     try {
       setIsSubmitting(true);
-      
+
       const payload = {
         purchaseOrderId: selectedPO.id,
         items: itemsToReturn.map(item => ({
@@ -135,6 +135,7 @@ export default function CreatePurchaseReturnPage() {
         })),
         reason,
         notes,
+        refundMethod: 'CASH' as const,
       };
 
       await purchaseReturnsAPI.create(payload);
@@ -188,7 +189,7 @@ export default function CreatePurchaseReturnPage() {
           // Select Purchase Order
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Cari Purchase Order</h2>
-            
+
             <div className="flex gap-3 mb-6">
               <div className="flex-1">
                 <SearchInput

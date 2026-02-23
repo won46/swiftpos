@@ -29,11 +29,12 @@ import rolePermissionRoutes from './routes/rolePermission.routes';
 
 import customerRoutes from './routes/customer.routes';
 import dataManagementRoutes from './routes/dataManagement.routes';
+import printerRoutes from './routes/printer.routes';
 
 const app: Application = express();
 const httpServer = createServer(app);
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:3000'];
 
 const io = new Server(httpServer, {
@@ -94,6 +95,7 @@ app.use('/api/purchase-returns', purchaseReturnRoutes);
 app.use('/api/role-permissions', rolePermissionRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/data', dataManagementRoutes);
+app.use('/api/printer', printerRoutes);
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

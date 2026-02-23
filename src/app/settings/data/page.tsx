@@ -19,7 +19,7 @@ export default function DataSettingsPage() {
     if (!confirm('PERINGATAN: Tindakan ini akan MENGHAPUS SEMUA transaksi, produk, dan kategori. Apakah Anda yakin ingin melanjutkan?')) {
       return;
     }
-    
+
     // Double confirm
     const confirmation = prompt('Ketik "RESET" untuk konfirmasi penghapusan data.');
     if (confirmation !== 'RESET') return;
@@ -84,13 +84,13 @@ export default function DataSettingsPage() {
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Reset Database</h2>
               <p className="text-gray-600 mb-4">
-                Tindakan ini akan menghapus semua data <strong>Produk</strong>, <strong>Kategori</strong>, <strong>Stok</strong>, dan <strong>Transaksi</strong>. 
+                Tindakan ini akan menghapus semua data <strong>Produk</strong>, <strong>Kategori</strong>, <strong>Stok</strong>, dan <strong>Transaksi</strong>.
                 Data Pengguna (User) dan pengaturan lainnya tidak akan dihapus. Pergunakan fitur ini dengan hati-hati.
               </p>
               <Button
                 onClick={handleReset}
                 disabled={isResetting || isImporting}
-                variant="destructive" // Assuming variant support or default style
+                variant="danger" // Changed from destructive to match Button component types
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 {isResetting ? 'Sedang Mereset...' : 'Hapus Semua Data'}
@@ -113,11 +113,11 @@ export default function DataSettingsPage() {
               </p>
               <div className="flex items-center gap-4">
                 <Button
-                    onClick={handleImport}
-                    disabled={isResetting || isImporting}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleImport}
+                  disabled={isResetting || isImporting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                    {isImporting ? 'Sedang Mengimport...' : 'Import Data Excel'}
+                  {isImporting ? 'Sedang Mengimport...' : 'Import Data Excel'}
                 </Button>
               </div>
 
@@ -161,11 +161,11 @@ export default function DataSettingsPage() {
               </p>
               <div className="flex items-center gap-4">
                 <Button
-                    onClick={handleGenerateBarcodes}
-                    disabled={isResetting || isImporting || isGenerating}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={handleGenerateBarcodes}
+                  disabled={isResetting || isImporting || isGenerating}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                    {isGenerating ? 'Sedang Memproses...' : 'Generate Barcode (Produk Tanpa Barcode)'}
+                  {isGenerating ? 'Sedang Memproses...' : 'Generate Barcode (Produk Tanpa Barcode)'}
                 </Button>
               </div>
 

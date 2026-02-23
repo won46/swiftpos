@@ -3,14 +3,14 @@ import axios from 'axios';
 
 // Determine API URL (Client-side vs Server-side)
 const getBaseUrl = () => {
-    // If running in browser, construct URL from current hostname to make image portable
-    if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        const port = '5001'; // Backend port is fixed
-        return `http://${hostname}:${port}/api`;
-    }
-    // Server-side fallback (Build time or SSR)
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+  // If running in browser, construct URL from current hostname to make image portable
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const port = '5001'; // Backend port is fixed
+    return `http://${hostname}:${port}/api`;
+  }
+  // Server-side fallback (Build time or SSR)
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 };
 
 const API_URL = getBaseUrl();
@@ -71,46 +71,46 @@ export default api;
 export const authAPI = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
-  
+
   refreshToken: (refreshToken: string) =>
     api.post('/auth/refresh', { refreshToken }),
-  
+
   getMe: () =>
     api.get('/auth/me'),
 };
 
 // Products API
 export const productsAPI = {
-  getAll: (params?: { 
-    search?: string; 
-    category?: number; 
+  getAll: (params?: {
+    search?: string;
+    category?: number;
     isActive?: boolean;
     barcode?: string;
   }) =>
     api.get('/products', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/products/${id}`),
 
   getByBarcode: (barcode: string) =>
     api.get(`/products/barcode/${barcode}`),
-  
+
   getLowStock: () =>
     api.get('/products/low-stock'),
-  
+
   create: (data: FormData | any) =>
     api.post('/products', data, {
       headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
     }),
-  
+
   update: (id: string, data: FormData | any) =>
     api.put(`/products/${id}`, data, {
       headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
     }),
-  
+
   delete: (id: string) =>
     api.delete(`/products/${id}`),
-    
+
   adjustStock: (id: string, data: {
     adjustmentQuantity: number;
     reason: string;
@@ -122,7 +122,7 @@ export const productsAPI = {
 export const stockAPI = {
   getAdjustments: (params?: { productId?: string; startDate?: string; endDate?: string }) =>
     api.get('/stock-adjustments', { params }),
-  
+
   createAdjustment: (data: {
     productId: string;
     newQuantity: number;
@@ -135,19 +135,19 @@ export const stockAPI = {
 export const unitsAPI = {
   getAll: (includeInactive = false) =>
     api.get('/units', { params: { includeInactive } }),
-  
+
   getById: (id: number) =>
     api.get(`/units/${id}`),
-  
+
   create: (data: { name: string; label: string; qty: number }) =>
     api.post('/units', data),
-  
+
   update: (id: number, data: { name?: string; label?: string; qty?: number; isActive?: boolean }) =>
     api.put(`/units/${id}`, data),
-  
+
   delete: (id: number) =>
     api.delete(`/units/${id}`),
-  
+
   seed: () =>
     api.get('/units/seed'),
 };
@@ -156,13 +156,13 @@ export const unitsAPI = {
 export const transactionsAPI = {
   getAll: (params?: any) =>
     api.get('/transactions', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/transactions/${id}`),
-  
+
   getTodayStats: () =>
     api.get('/transactions/stats/today'),
-  
+
   create: (data: {
     customerName?: string;
     customerId?: string; // Added customerId
@@ -177,14 +177,14 @@ export const transactionsAPI = {
     discountAmount: number;
     totalAmount: number;
     paidAmount: number;
-    paymentMethod: 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT'; // Updated payment methods
+    paymentMethod: 'CASH' | 'CARD' | 'QRIS' | 'DEBT' | 'SPLIT' | 'CASHLESS'; // Updated payment methods
     payments?: Array<{ method: string; amount: number; notes?: string }>;
   }) =>
     api.post('/transactions', data),
 
   repayDebt: (id: string, data: {
     amount: number;
-    paymentMethod: 'CASH' | 'CARD' | 'QRIS';
+    paymentMethod: 'CASH' | 'CARD' | 'QRIS' | 'CASHLESS';
     notes?: string;
   }) =>
     api.post(`/transactions/${id}/repay`, data),
@@ -194,16 +194,16 @@ export const transactionsAPI = {
 export const categoriesAPI = {
   getAll: () =>
     api.get('/categories'),
-  
+
   getById: (id: number) =>
     api.get(`/categories/${id}`),
-  
+
   create: (data: { name: string; description?: string }) =>
     api.post('/categories', data),
-  
+
   update: (id: string, data: { name?: string; description?: string }) =>
     api.put(`/categories/${id}`, data),
-  
+
   delete: (id: string) =>
     api.delete(`/categories/${id}`),
 };
@@ -212,10 +212,10 @@ export const categoriesAPI = {
 export const suppliersAPI = {
   getAll: (params?: { isActive?: boolean }) =>
     api.get('/suppliers', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/suppliers/${id}`),
-  
+
   create: (data: {
     name: string;
     contactPerson: string;
@@ -224,7 +224,7 @@ export const suppliersAPI = {
     address?: string;
   }) =>
     api.post('/suppliers', data),
-  
+
   update: (id: string, data: {
     name: string;
     contactPerson: string;
@@ -234,7 +234,7 @@ export const suppliersAPI = {
     isActive?: boolean;
   }) =>
     api.put(`/suppliers/${id}`, data),
-  
+
   delete: (id: string) =>
     api.delete(`/suppliers/${id}`),
 };
@@ -243,10 +243,10 @@ export const suppliersAPI = {
 export const purchasesAPI = {
   getAll: (params?: { status?: string; supplierId?: string; search?: string }) =>
     api.get('/purchases', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/purchases/${id}`),
-  
+
   create: (data: {
     supplierId: string;
     items: Array<{
@@ -258,10 +258,10 @@ export const purchasesAPI = {
     notes?: string;
   }) =>
     api.post('/purchases', data),
-  
+
   receive: (id: string) =>
     api.put(`/purchases/${id}/receive`),
-  
+
   cancel: (id: string) =>
     api.delete(`/purchases/${id}`),
 };
@@ -271,25 +271,25 @@ export const purchasesAPI = {
 export const reportsAPI = {
   getOverview: (params?: { startDate?: string; endDate?: string }) =>
     api.get('/reports/overview', { params }),
-  
+
   getSalesByDate: (params?: { startDate?: string; endDate?: string }) =>
     api.get('/reports/sales-by-date', { params }),
-  
+
   getTopProducts: (params?: { startDate?: string; endDate?: string; limit?: number }) =>
     api.get('/reports/top-products', { params }),
-  
+
   getSalesByCategory: (params?: { startDate?: string; endDate?: string }) =>
     api.get('/reports/sales-by-category', { params }),
-  
+
   getPaymentMethods: (params?: { startDate?: string; endDate?: string }) =>
     api.get('/reports/payment-methods', { params }),
-  
+
   getSlowProducts: (params?: { days?: number; limit?: number }) =>
     api.get('/reports/slow-products', { params }),
-  
+
   getDailySales: (days = 7) =>
     api.get('/reports/daily-sales', { params: { days } }),
-  
+
   getProductStats: (days = 30) =>
     api.get('/reports/product-stats', { params: { days } }),
 };
@@ -304,10 +304,10 @@ export const inventoryAPI = {
 export const usersAPI = {
   getAll: (params?: { role?: string; isActive?: boolean }) =>
     api.get('/users', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/users/${id}`),
-  
+
   create: (data: {
     email: string;
     password: string;
@@ -315,7 +315,7 @@ export const usersAPI = {
     role: 'ADMIN' | 'MANAGER' | 'KASIR';
   }) =>
     api.post('/users', data),
-  
+
   update: (id: string, data: {
     email: string;
     fullName: string;
@@ -324,7 +324,7 @@ export const usersAPI = {
     password?: string;
   }) =>
     api.put(`/users/${id}`, data),
-  
+
   delete: (id: string) =>
     api.delete(`/users/${id}`),
 };
@@ -334,14 +334,14 @@ export const uploadAPI = {
   uploadProductImage: (file: File) => {
     const formData = new FormData();
     formData.append('image', file);
-    
+
     return api.post('/upload/product', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
-  
+
   deleteProductImage: (filename: string) =>
     api.delete(`/upload/product/${filename}`),
 };
@@ -371,10 +371,10 @@ export const paymentsAPI = {
     customerName?: string;
   }) =>
     api.post('/payments/snap/create', data),
-  
+
   checkStatus: (orderId: string) =>
     api.get(`/payments/qris/${orderId}/status`),
-  
+
   cancelPayment: (orderId: string) =>
     api.post(`/payments/qris/${orderId}/cancel`),
 };
@@ -383,13 +383,13 @@ export const paymentsAPI = {
 export const discountsAPI = {
   getAll: (params?: { isActive?: boolean }) =>
     api.get('/discounts', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/discounts/${id}`),
-  
+
   getByCode: (code: string) =>
     api.get(`/discounts/code/${code}`),
-  
+
   create: (data: {
     code: string;
     name: string;
@@ -405,19 +405,19 @@ export const discountsAPI = {
     applicableUnit?: string;
   }) =>
     api.post('/discounts', data),
-  
+
   update: (id: string, data: any) =>
     api.put(`/discounts/${id}`, data),
-  
+
   delete: (id: string) =>
     api.delete(`/discounts/${id}`),
-  
+
   validate: (code: string, amount: number) =>
     api.post('/discounts/validate', { code, amount }),
-  
+
   getApplicableForProduct: (productId: string) =>
     api.get(`/discounts/product/${productId}/applicable`),
-  
+
   getBestForProduct: (productId: string, price: number) =>
     api.get(`/discounts/product/${productId}/best`, { params: { price } }),
 };
@@ -426,13 +426,13 @@ export const discountsAPI = {
 export const expiryAPI = {
   getExpired: () =>
     api.get('/expiry/expired'),
-  
+
   getNearExpiry: (days: number = 30) =>
     api.get('/expiry/near-expiry', { params: { days } }),
-  
+
   getSummary: () =>
     api.get('/expiry/summary'),
-  
+
   markDisposed: (productId: string, reason: string, quantity?: number) =>
     api.post('/expiry/dispose', { productId, reason, quantity }),
 };
@@ -441,16 +441,16 @@ export const expiryAPI = {
 export const rolePermissionsAPI = {
   getAll: () =>
     api.get('/role-permissions'),
-  
+
   getByRole: (role: string) =>
     api.get(`/role-permissions/${role}`),
-  
+
   update: (id: string, data: any) =>
     api.put(`/role-permissions/${id}`, data),
-  
+
   bulkUpdate: (role: string, permissions: any[]) =>
     api.put(`/role-permissions/role/${role}`, { permissions }),
-  
+
   resetToDefaults: (role: string) =>
     api.post(`/role-permissions/reset/${role}`),
 };
@@ -459,10 +459,10 @@ export const rolePermissionsAPI = {
 export const customersAPI = {
   getAll: (params?: { search?: string; page?: number; limit?: number }) =>
     api.get('/customers', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/customers/${id}`),
-  
+
   create: (data: {
     name: string;
     phone?: string;
@@ -471,7 +471,7 @@ export const customersAPI = {
     creditLimit?: number;
   }) =>
     api.post('/customers', data),
-  
+
   update: (id: string, data: {
     name: string;
     phone?: string;
@@ -481,7 +481,7 @@ export const customersAPI = {
     isActive?: boolean;
   }) =>
     api.put(`/customers/${id}`, data),
-  
+
   delete: (id: string) =>
     api.delete(`/customers/${id}`),
 };
@@ -554,7 +554,7 @@ export const purchaseReturnsAPI = {
 export const dataManagementAPI = {
   resetDatabase: () =>
     api.post('/data/reset'),
-  
+
   importExcel: () =>
     api.post('/data/import-excel'),
 
@@ -562,15 +562,34 @@ export const dataManagementAPI = {
     api.post('/data/generate-barcodes'),
 };
 
+// Printer API
+export const printerAPI = {
+  printReceipt: (data: {
+    items: Array<{
+      name: string;
+      qty: number;
+      price: number;
+      total: number;
+    }>;
+    totalAmount: number;
+    storeName?: string;
+    storeAddress?: string;
+    storePhone?: string;
+    amountPaid?: number;
+    change?: number;
+  }) => api.post('/printer/receipt', data),
+};
+
+
 
 // Helper to get full image URL
 export const getImageUrl = (imageUrl?: string | null) => {
   if (!imageUrl) return null;
   if (imageUrl.startsWith('http')) return imageUrl;
   // Use dynamic base URL
-  const baseUrl = (typeof window !== 'undefined') 
-      ? `http://${window.location.hostname}:5001`
-      : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001');
-      
+  const baseUrl = (typeof window !== 'undefined')
+    ? `http://${window.location.hostname}:5001`
+    : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001');
+
   return `${baseUrl}${imageUrl}`;
 };
