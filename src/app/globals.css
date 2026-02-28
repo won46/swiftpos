@@ -632,8 +632,8 @@ tr:hover td {
 
 .cart-item {
   display: flex;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   transition: background var(--transition-fast);
 }

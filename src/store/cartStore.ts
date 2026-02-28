@@ -4,7 +4,8 @@ import { CartItem, Product, PaymentMethod } from '@/types';
 interface CartItemWithUnit extends CartItem {
   unitType?: string;      // pcs, lusin, kodi, dus
   qtyMultiplier?: number; // How many pcs per unit
-  discount?: number;      // Manual discount amount
+  discount: number;       // Manual nominal discount amount (calculated from percent or manual)
+  discountPercent: number; // Percentage discount
 }
 
 interface CartStore {
@@ -19,6 +20,7 @@ interface CartStore {
   removeItem: (productId: string, unitType?: string) => void;
   updateQuantity: (productId: string, quantity: number, unitType?: string) => void;
   setItemDiscount: (productId: string, unitType: string, discount: number) => void;
+  setItemDiscountPercent: (productId: string, unitType: string, percent: number) => void;
   setCustomerName: (name: string) => void;
   setCustomer: (id: string | null, name: string) => void; // Added setCustomer
   setDiscount: (percent: number) => void;
@@ -57,7 +59,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
               ? {
                   ...item,
                   quantity: item.quantity + quantity,
-                  totalPrice: ((item.quantity + quantity) * item.unitPrice) - (item.discount || 0),
+                  totalPrice: ((item.quantity + quantity) * item.unitPrice) * (1 - (item.discountPercent || 0) / 100),
+                  discount: ((item.quantity + quantity) * item.unitPrice) * ((item.discountPercent || 0) / 100)
                 }
               : item
           ),
@@ -76,6 +79,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
             unitType,
             qtyMultiplier,
             discount: 0,
+            discountPercent: 0,
           },
         ],
       };
@@ -102,7 +106,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
           ? {
               ...item,
               quantity,
-              totalPrice: (quantity * item.unitPrice) - (item.discount || 0),
+              totalPrice: (quantity * item.unitPrice) * (1 - (item.discountPercent || 0) / 100),
+              discount: (quantity * item.unitPrice) * ((item.discountPercent || 0) / 100)
             }
           : item
       ),
@@ -116,7 +121,23 @@ export const useCartStore = create<CartStore>((set, get) => ({
           ? {
               ...item,
               discount,
+              discountPercent: ((discount / (item.quantity * item.unitPrice)) * 100),
               totalPrice: (item.quantity * item.unitPrice) - discount,
+            }
+          : item
+      ),
+    }));
+  },
+
+  setItemDiscountPercent: (productId, unitType = 'pcs', percent) => {
+    set((state) => ({
+      items: state.items.map(item =>
+        item.productId === productId && (item.unitType || 'pcs') === unitType
+          ? {
+              ...item,
+              discountPercent: percent,
+              discount: (item.quantity * item.unitPrice) * (percent / 100),
+              totalPrice: (item.quantity * item.unitPrice) * (1 - percent / 100),
             }
           : item
       ),
@@ -132,28 +153,27 @@ export const useCartStore = create<CartStore>((set, get) => ({
   clearCart: () => set({ items: [], customerName: '', customerId: null, discountPercent: 0 }),
   
   getSubtotal: () => {
-    return get().items.reduce((sum, item) => sum + item.totalPrice, 0);
+    // Return Gross Subtotal (Sum of Qty * Price)
+    return get().items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   },
   
   getTaxAmount: () => {
-    const subtotal = get().getSubtotal();
-    const discountAmount = get().getDiscountAmount();
-    return (subtotal - discountAmount) * (get().taxPercent / 100);
+    const total = get().getTotal();
+    return total * (get().taxPercent / 100);
   },
   
   getDiscountAmount: () => {
-    // Global discount applied to subtotal (which already has item discounts deducted)
-    return get().getSubtotal() * (get().discountPercent / 100);
+    // Sum of all item discounts + global discount applied to (Gross Subtotal - Item Discounts)
+    const itemDiscounts = get().items.reduce((sum, item) => sum + (item.discount || 0), 0);
+    const subtotalAfterItemDiscounts = get().getSubtotal() - itemDiscounts;
+    const globalDiscount = subtotalAfterItemDiscounts * (get().discountPercent / 100);
+    return itemDiscounts + globalDiscount;
   },
   
   getTotal: () => {
     const subtotal = get().getSubtotal();
     const discount = get().getDiscountAmount();
-    const tax = get().getTaxAmount(); // This returns 0 if we removed tax logic in components, but logic remains in store
-    
-    // Based on user request, tax is ignored in display, so we should ensure it returns 0 here or is ignored
-    // But for safety let's return it as is, component controls display
-    return subtotal - discount; // + tax; // Removing tax from total calc as per previous context
+    return subtotal - discount;
   },
   
   getItemCount: () => {

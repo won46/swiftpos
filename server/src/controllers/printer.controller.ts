@@ -7,6 +7,7 @@ export const testPrint = async (req: Request, res: Response): Promise<void> => {
 
         // You can customize the data passed from the frontend
         const printData = {
+            ...data,
             items: data.items || [
                 { name: 'Test Item 1', qty: 1, price: 10000, total: 10000 },
                 { name: 'Test Item 2', qty: 2, price: 5000, total: 10000 }

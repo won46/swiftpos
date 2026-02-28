@@ -271,18 +271,22 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
   const { printReceipt } = usePrint();
 
   const handlePrint = async () => {
+    const { getSubtotal, getDiscountAmount } = useCartStore.getState();
+    const subtotal = getSubtotal();
+    const discountAmount = getDiscountAmount();
+
     const transaction = {
       id: 'TEMP-' + Date.now(),
       invoiceNumber: 'POS-' + Date.now(),
       userId: 'CURRENT_USER',
-      subtotal: total,
+      subtotal: subtotal,
       taxAmount: 0,
-      discountAmount: 0,
+      discountAmount: discountAmount,
       totalAmount: total,
       paidAmount: selectedMethod === 'SPLIT' ? total : paidAmount,
       changeAmount: changeAmount,
       paymentMethod: selectedMethod || 'CASH',
-      status: 'COMPLETED' as any, // Quick fix, could import TransactionStatus if we want
+      status: 'COMPLETED' as any,
       transactionDate: new Date(),
       items: items.map((item, index) => ({
         id: `temp-item-${index}`,
@@ -291,7 +295,9 @@ export function PaymentModal({ isOpen, onClose, onComplete }: PaymentModalProps)
         product: item.product,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice
+        totalPrice: item.totalPrice,
+        discount: item.discount,
+        discountPercent: item.discountPercent
       }))
     };
     

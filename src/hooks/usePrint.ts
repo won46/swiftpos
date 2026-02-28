@@ -52,12 +52,20 @@ export function usePrint() {
           const price = item.unitPrice.toLocaleString();
           const total = item.totalPrice.toLocaleString();
           receipt += `${qty} x ${price}`.padEnd(20) + total.padStart(12) + '\n';
+          
+          if (item.discount && item.discount > 0) {
+            receipt += `  (Potongan: -${item.discount.toLocaleString()})\n`;
+          }
         });
 
         receipt += '--------------------------------\n';
 
         // Totals
-        receipt += 'Total:'.padEnd(20) + transaction.totalAmount.toLocaleString().padStart(12) + '\n';
+        receipt += 'Subtotal:'.padEnd(20) + transaction.subtotal.toLocaleString().padStart(12) + '\n';
+        if (transaction.discountAmount && transaction.discountAmount > 0) {
+          receipt += 'Total Diskon:'.padEnd(20) + `-${transaction.discountAmount.toLocaleString()}`.padStart(12) + '\n';
+        }
+        receipt += 'TOTAL:'.padEnd(20) + transaction.totalAmount.toLocaleString().padStart(12) + '\n';
         if (transaction.paidAmount) {
           receipt += 'Bayar:'.padEnd(20) + transaction.paidAmount.toLocaleString().padStart(12) + '\n';
         }
@@ -85,8 +93,12 @@ export function usePrint() {
               name: item.product?.name || 'Item',
               qty: item.quantity,
               price: item.unitPrice,
-              total: item.totalPrice
+              total: item.totalPrice,
+              discount: item.discount,
+              discountPercent: item.discountPercent
             })),
+            subtotal: transaction.subtotal,
+            discountAmount: transaction.discountAmount,
             totalAmount: transaction.totalAmount,
             storeName: settings?.storeName,
             storeAddress: settings?.storeAddress,
@@ -114,8 +126,12 @@ export function usePrint() {
             name: item.product?.name || 'Item',
             qty: item.quantity,
             price: item.unitPrice,
-            total: item.totalPrice
+            total: item.totalPrice,
+            discount: item.discount,
+            discountPercent: item.discountPercent
           })),
+          subtotal: transaction.subtotal,
+          discountAmount: transaction.discountAmount,
           totalAmount: transaction.totalAmount,
           storeName: settings?.storeName,
           storeAddress: settings?.storeAddress,

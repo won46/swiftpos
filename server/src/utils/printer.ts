@@ -73,14 +73,29 @@ export const printReceipt = async (data: any) => {
                 if (data.items && Array.isArray(data.items)) {
                     data.items.forEach((item: any) => {
                         printer.text(`${item.name}`);
-                        printer.text(`${item.qty} x ${item.price} = ${item.total}`);
+                        const qtyPrice = `${item.qty} x ${item.price}`;
+                        const total = `${item.total}`;
+                        printer.text(qtyPrice.padEnd(20) + total.padStart(12));
+                        
+                        if (item.discount && item.discount > 0) {
+                            printer.text(`   (Potongan: -${item.discount})`);
+                        }
                     });
                 }
 
                 printer
                     .text('----------------')
-                    .align('RT')
-                    .text(`Total: ${data.totalAmount || 0}`);
+                    .align('RT');
+
+                if (data.subtotal) {
+                    printer.text(`Subtotal: ${data.subtotal}`);
+                }
+                
+                if (data.discountAmount && data.discountAmount > 0) {
+                    printer.text(`Total Diskon: -${data.discountAmount}`);
+                }
+
+                printer.text(`Total: ${data.totalAmount || 0}`);
 
                 if (data.amountPaid !== undefined) {
                     printer

@@ -100,6 +100,8 @@ export interface TransactionItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  discount?: number;
+  discountPercent?: number;
 }
 
 export interface StockAdjustment {

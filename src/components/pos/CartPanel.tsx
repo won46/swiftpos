@@ -23,6 +23,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
     updateQuantity,
     removeItem,
     setItemDiscount,
+    setItemDiscountPercent,
     clearCart,
     getSubtotal,
     getTaxAmount,
@@ -196,7 +197,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                 </div>
                 
                 {/* Row 2: Price x Qty = Total */}
-                <div className="flex items-center justify-between pl-13">
+                <div className="flex items-center justify-between pl-12 mt-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-[var(--foreground-muted)]">{formatPrice(item.unitPrice)}</span>
                     <span className="text-xs text-[var(--foreground-muted)]">×</span>
@@ -204,7 +205,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                       <button
                         tabIndex={-1}
                         onClick={() => updateQuantity(item.productId, item.quantity - 1, unitType)}
-                        className="w-5 h-5 rounded bg-[var(--surface)] hover:bg-[var(--surface-hover)] flex items-center justify-center"
+                        className="w-5 h-5 rounded bg-[var(--surface)] hover:bg-[var(--surface-hover)] flex items-center justify-center border border-[var(--border)]"
                       >
                         <Minus size={10} />
                       </button>
@@ -213,43 +214,49 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                         ref={(el) => { quantityInputRefs.current[item.productId] = el; }}
                         value={item.quantity}
                         onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1, unitType)}
-                        className="w-8 text-center text-xs font-medium input py-0.5"
+                        className="w-10 text-center text-xs font-semibold input py-0.5"
                         min="1"
                       />
                       <button
                         tabIndex={-1}
                         onClick={() => updateQuantity(item.productId, item.quantity + 1, unitType)}
-                        className="w-5 h-5 rounded bg-[var(--surface)] hover:bg-[var(--surface-hover)] flex items-center justify-center"
+                        className="w-5 h-5 rounded bg-[var(--surface)] hover:bg-[var(--surface-hover)] flex items-center justify-center border border-[var(--border)]"
                       >
                         <Plus size={10} />
                       </button>
                     </div>
-                    {unitType !== 'pcs' && (
-                      <span className="text-xs bg-[var(--primary)] text-white px-1 py-0.5 rounded capitalize">
-                        {unitType}
-                      </span>
-                    )}
+                  </div>
+                  <span className="text-sm font-bold text-[var(--foreground)]">
+                    {formatPrice(item.totalPrice)}
+                  </span>
+                </div>
+
+                {/* Row 3: Discount Input (Below) */}
+                <div className="pl-12 mt-1 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-[var(--foreground-muted)] uppercase tracking-wider">Diskon:</span>
+                    <div className="flex items-center gap-0.5 border border-[var(--border)] rounded px-2 bg-white focus-within:border-[var(--primary)] transition-colors">
+                      <input
+                        type="number"
+                        value={(item as any).discountPercent || 0}
+                        onChange={(e) => {
+                          const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                          setItemDiscountPercent(item.productId, unitType, val);
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        className="w-10 text-center text-xs font-bold bg-transparent focus:outline-none py-1"
+                        min="0"
+                        max="100"
+                      />
+                      <span className="text-[10px] font-bold text-[var(--foreground-muted)]">%</span>
+                    </div>
                   </div>
                   
-                  {/* Total Price with Item Discount Popover */}
-                  <div className="flex flex-col items-end">
-                    <button
-                      className="text-sm font-semibold text-[var(--primary)] hover:underline decoration-dashed decoration-[var(--primary)]/50 underline-offset-4"
-                      onClick={() => {
-                        const newDiscount = prompt('Masukkan diskon nominal untuk item ini (Rp):', (item as any).discount?.toString() || '0');
-                        if (newDiscount !== null) {
-                          setItemDiscount(item.productId, unitType, parseInt(newDiscount.replace(/\D/g, '')) || 0);
-                        }
-                      }}
-                    >
-                      {formatPrice(item.totalPrice)}
-                    </button>
-                    {(item as any).discount > 0 && (
-                      <span className="text-[10px] text-[var(--success)]">
-                        Disc. -{formatPrice((item as any).discount)}
-                      </span>
-                    )}
-                  </div>
+                  {(item as any).discount > 0 && (
+                    <span className="text-[10px] text-[var(--success)] font-bold bg-[var(--success-bg)] px-2 py-0.5 rounded">
+                      Potongan -{formatPrice((item as any).discount)}
+                    </span>
+                  )}
                 </div>
               </motion.div>
               );
@@ -297,12 +304,12 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
           {/* Price Summary */}
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--foreground-muted)]">Subtotal</span>
+              <span className="text-[var(--foreground-muted)]">Subtotal Gross</span>
               <span>{formatPrice(getSubtotal())}</span>
             </div>
-            {discountPercent > 0 && (
+            {getDiscountAmount() > 0 && (
               <div className="flex justify-between text-sm text-[var(--success)]">
-                <span>Diskon ({discountPercent}%)</span>
+                <span>Total Diskon</span>
                 <span>-{formatPrice(getDiscountAmount())}</span>
               </div>
             )}

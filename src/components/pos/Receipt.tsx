@@ -86,7 +86,14 @@ export function Receipt({ transaction }: ReceiptProps) {
         <tbody>
           {transaction.items?.map((item, idx) => (
             <tr key={idx}>
-              <td>{item.product?.name || 'Product'}</td>
+              <td>
+                <div>{item.product?.name || 'Product'}</div>
+                {item.discount && item.discount > 0 && (
+                  <div style={{ fontSize: '0.7rem', color: '#10B981', marginLeft: '0.5rem' }}>
+                    (Potongan: -{formatCurrency(item.discount)})
+                  </div>
+                )}
+              </td>
               <td>{item.quantity}</td>
               <td>{formatCurrency(item.unitPrice)}</td>
               <td>{formatCurrency(item.totalPrice)}</td>
